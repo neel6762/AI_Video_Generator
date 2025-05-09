@@ -1,14 +1,128 @@
 from typing import List
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy import ImageClip, AudioFileClip, concatenate_videoclips
 from langchain_community.tools import DuckDuckGoSearchResults
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 import re
-import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
+import os
+import datetime
+import torch
+from diffusers import DiffusionPipeline
+
+from langchain_core.tools import tool
+from langchain_ollama.chat_models import ChatOllama
+from langchain_core.messages import HumanMessage, SystemMessage
+
+from config import CONFIG
 
 
+class ScriptSection(BaseModel):
+    section_number: int = Field(..., description="The number of the section in the video")
+    section_title: str = Field(..., description="The title of the section")
+    narration: str = Field(..., description="The narration of the section")
+    prompt_for_image: List[str] = Field(..., description="The prompt for the image")
+
+
+class VideoScript(BaseModel):
+    project_name: str = Field(..., description="The name of the project")
+    title: str = Field(..., description="The title of the video")
+    description: str = Field(..., description="The description of the video")
+    script_sections: List[ScriptSection] = Field(..., description="The sections of the video")
+
+@tool
+def generate_video_script(user_prompt: str) -> str:
+    """Generates a video script from a given prompt.
+    
+    :param user_prompt: The prompt to generate the video script from.
+    :return: The video script in json format.
+    """
+    
+    output_dir = "llm_responses"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    model_config = CONFIG["llm_model_config"]
+    prompt_config = CONFIG["llm_prompt_config"]
+    
+    model = ChatOllama(
+        model = model_config["model_name"],
+        temperature = model_config["temperature"],
+        num_ctx = model_config["num_ctx"],
+        keep_alive = 0
+    )
+            
+    USER_PROMPT = f"""Generate a video script for the following prompt:
+    {user_prompt}
+
+    # Example
+    User Prompt: 
+    "History of football"
+    
+    Output:
+    {prompt_config["example_prompt"]}
+    """
+    
+    messages = [
+        SystemMessage(content=[{"type": "text", "text": prompt_config["system_prompt"]}]),
+        HumanMessage(content=[{"type": "text", "text": USER_PROMPT}]),
+    ]
+    
+    structured_output = model.with_structured_output(VideoScript)
+    response = structured_output.invoke(messages)
+    json_response = response.model_dump()
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"llm_response_{response.project_name}_{timestamp}.json"
+    output_path = os.path.join(output_dir, filename)
+
+    with open(output_path, "w") as f:
+        json.dump(json_response, f)
+    
+    return json_response
+
+@tool   
+def generate_images(llm_response: dict):
+    """Generate images from the llm response. Uses prompt suggestions from the llm response to generate images 
+    and saves them to the project directory.
+    
+    :param llm_response: The llm response in json format
+    :return: str (path to the project directory)
+    """
+
+    model_id = CONFIG["image_generation_config"]["model_name"]
+    num_inference_steps = CONFIG["image_generation_config"]["num_inference_steps"]
+    guidance_scale = CONFIG["image_generation_config"]["guidance_scale"]
+
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    pipe = DiffusionPipeline.from_pretrained(
+        model_id,
+        torch_dtype=torch.float16,
+        variant="fp16",
+        use_safetensors=True
+    )
+
+    pipe = pipe.to(device)
+    project_dir = os.path.join("images", llm_response["project_name"])
+    
+    os.makedirs(project_dir, exist_ok=True)
+
+    for section in llm_response["script_sections"]:
+        section_number = section["section_number"]
+        section_description = section["narration"]
+        print(f"-------------------\n{section_description}\n-------------------\n")
+
+        for index, prompt in enumerate(section["prompt_for_image"]):
+            print(f"Generating image for {prompt}")
+            print(f"Prompt: {prompt}")
+            image = pipe(prompt, num_inference_steps=num_inference_steps, guidance_scale=guidance_scale).images[0]
+            image.save(os.path.join(project_dir, f"section_{section_number}_image_{index + 1}.png"))
+            print(f"Image saved as {os.path.join(project_dir, f'section_{section_number}_image_{index + 1}.png')}")
+    
+    return project_dir
+
+
+@tool
 def assemble_video(image_paths: List[str], audio_paths: List[str], output_path: str):
     """
     Assembles a video by pairing images with corresponding audio clips and outputs the final video.
@@ -83,8 +197,8 @@ class DuckDuckGoSearchTool:
             content = self.scrape_and_clean(url)
             if content:
                 scraped_content.append(content)
+            break
 
         print(f'...Done Performing Search on Query: {query}')
         return scraped_content
-
 
