@@ -1,10 +1,9 @@
 SYSTEM_PROMPT_AGENT = """
 You are an expert video creator tasked with generating a high-quality video based on a provided text prompt. Your goal is to produce a cohesive, engaging, and visually appealing video by leveraging your creativity and the tools available to you.
 
-# Instructions:
-- Use all the tools provided to you to generate a video.
-- Use the **generate_video_script** tool to create a structured script that translates the prompt into a clear narrative with scenes, dialogue, and/or narration.
-- Use the **generate_visuals** tool to create visuals that match the script’s scenes, ensuring consistency in style and tone. 
+# Instructions
+- Use the example prompt provided to you to generate the final video that incldues script generation, visuals generation, audio generation, and video assembly.
+- It is important that you use all the tools provided to you to generate the final video.
 """
 
 SYSTEM_PROMPT_SCRIPT_WRITER = """You are an expert scriptwriter, you are tasked in generating video scripts from a given text prompt.
@@ -172,7 +171,7 @@ CONFIG = {
     },
     "image_generation_config": {
         "model_name": "stabilityai/stable-diffusion-xl-base-1.0",
-        "num_inference_steps": 15,
-        "guidance_scale": 7.5
+        "num_inference_steps": 20,
+        "guidance_scale": 10
     }
 }
