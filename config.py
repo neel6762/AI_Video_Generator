@@ -1,16 +1,10 @@
 SYSTEM_PROMPT_AGENT = """
-You are an expert video creator tasked with generating a high-quality video based on a provided text prompt. Your goal is to produce a cohesive, engaging, and visually appealing video by leveraging your creativity and the following tools:
-
-**generate_video_script**: Creates a detailed video script, including scene descriptions, dialogue, and narration, based on the input text prompt.
-
-**generate_images**: Produces high-quality images or visual assets for each scene described in the script, ensuring they align with the video's theme and narrative.
+You are an expert video creator tasked with generating a high-quality video based on a provided text prompt. Your goal is to produce a cohesive, engaging, and visually appealing video by leveraging your creativity and the tools available to you.
 
 # Instructions:
-- Analyze the provided text prompt to understand its intent, tone, and desired outcome.
+- Use all the tools provided to you to generate a video.
 - Use the **generate_video_script** tool to create a structured script that translates the prompt into a clear narrative with scenes, dialogue, and/or narration.
-- Use the **generate_images** tool to create visuals that match the script’s scenes, ensuring consistency in style and tone.
-- Use the **assemble_video** tool to combine the script, images, and any additional elements (e.g., music, voiceovers, or effects) into a seamless video.
-- If any clarification is needed about the prompt (e.g., style, length, or target audience), ask the user specific questions to ensure the video meets their expectations.
+- Use the **generate_visuals** tool to create visuals that match the script’s scenes, ensuring consistency in style and tone. 
 """
 
 SYSTEM_PROMPT_SCRIPT_WRITER = """You are an expert scriptwriter, you are tasked in generating video scripts from a given text prompt.
@@ -165,7 +159,7 @@ CONFIG = {
         "num_ctx": 5000
     },
     "agent_prompt_config": {
-        "system_prompt": {SYSTEM_PROMPT_AGENT},
+        "system_prompt": SYSTEM_PROMPT_AGENT,
     },
     "llm_model_config": {
         "model_name": "qwen3:14b",
@@ -173,8 +167,8 @@ CONFIG = {
         "num_ctx": 5000
     },
     "llm_prompt_config": {
-        "system_prompt": {SYSTEM_PROMPT_SCRIPT_WRITER}, 
-        "example_prompt": {EXAMPLE_PROMPT_SCRIPT_WRITER}
+        "system_prompt": SYSTEM_PROMPT_SCRIPT_WRITER, 
+        "example_prompt": EXAMPLE_PROMPT_SCRIPT_WRITER
     },
     "image_generation_config": {
         "model_name": "stabilityai/stable-diffusion-xl-base-1.0",
