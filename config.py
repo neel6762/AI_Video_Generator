@@ -15,7 +15,7 @@ SYSTEM_PROMPT_SCRIPT_WRITER = """You are an expert scriptwriter, you are tasked 
     - Keep total narration suitable for 5 minutes (~700-750 words).
     - Use clear and engaging language suitable for a general audience.
     - Include 6-8 sections (chronological or thematic).
-    - Provide 2–3 visual suggestions per section to guide video creation.
+    - Provide 3–4 visual suggestions per section to guide video creation.
     - The script should be in the form of a story, with a beginning, middle, and end.
 
     # Output Struture

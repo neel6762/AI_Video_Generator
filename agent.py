@@ -55,7 +55,7 @@ def invoke_agent(user_prompt: str):
 
 if __name__ == "__main__":
 
-    user_prompt = "Advertising campaign for a pizza shop"
+    user_prompt = input("Enter your prompt to generate a video: ").strip()
     agent = invoke_agent(user_prompt)
     agent.invoke({"input": user_prompt})
     
