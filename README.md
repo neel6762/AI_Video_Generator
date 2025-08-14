@@ -1,4 +1,4 @@
-# LocalAgentExercise
+# AI Video Generation System
 
 An AI-powered video generation system that creates videos from text prompts using local text and image-to-text models and other tools. This project demonstrates the integration of multiple AI technologies to automate video creation, including script generation, image generation, audio synthesis, and video assembly.
 
